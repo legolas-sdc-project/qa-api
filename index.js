@@ -1,14 +1,22 @@
 const express = require('express');
-const pgp = require('pg-promise')(/* initialization options */);
+const { Pool, Client } = require("pg");
+// const pgp = require('pg-promise')(/* initialization options */);
 
 const app = express();
 app.set('port', process.env.PORT || 3000);
 
-const connectionString = 'postgres://chiaoling:@localhost:5432/sdc';
+const credentials = {
+  user: "chiaoling",
+  host: "localhost",
+  database: "sdc",
+  password: "",
+  port: 5432,
+};
 
-const db = new Client({
-  connectionString: connectionString;
-});
+const db = new Client(credentials);
+
+db.connect();
+
 
 // pg-promise
 // db.one('SELECT name FROM users WHERE id = 40344')
@@ -20,12 +28,12 @@ const db = new Client({
 //   });
   
 app.get('/', function (req, res, next) {
-  client.query('SELECT * FROM Employee where id = $1', [1], function (err, result) {
-      if (err) {
-          console.log(err);
-          res.status(400).send(err);
-      }
-      res.status(200).send(result.rows);
+  db.query('SELECT * FROM qa_schema.questions where id = 1', (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(JSON.stringify(result.rows));
+    }
   });
 });
 
