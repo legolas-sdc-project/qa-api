@@ -4,20 +4,18 @@ create table qa_schema.questions(
   id serial primary key,
   product_id int,
   question_body text,
-  question_date timestamptz,
+  question_date bigint,
   asker_name varchar(30) not null,
   asker_email varchar(50) not null,
   reported bit,
-  question_helpfulness int,
-  foreign key(product_id)
-  references products(id)
+  question_helpfulness int
 );
 
 create table qa_schema.answers (
   id serial primary key,
   question_id int,
   body text,
-  date timestamptz,
+  date bigint,
   answerer_name varchar(30) not null,
   answerer_email varchar(50) not null,
   reported bit,
@@ -38,8 +36,8 @@ create table qa_schema.photos (
 
 -- load csv data into tables
 
-\copy questions from '/data/questions.csv' delimiter ',' csv header;
+\copy questions from './data/questions.csv' delimiter ',' csv header;
 
-\copy answers from '/data/answers.csv' delimiter ',' csv header;
+\copy answers from './data/answers.csv' delimiter ',' csv header;
 
-\copy photos from '/data/answers_photos.csv' delimiter ',' csv header;
+\copy photos from './data/answers_photos.csv' delimiter ',' csv header;
