@@ -1,13 +1,11 @@
-var DataTypes = require("sequelize").DataTypes;
-var _answers = require("./answers");
-var _photos = require("./photos");
-var _products = require("./products");
-var _questions = require("./questions");
+var { DataTypes } = require("sequelize");
+var _answers = require("./answers.js");
+var _photos = require("./photos.js");
+var _questions = require("./questions.js");
 
 function initModels(sequelize) {
   var answers = _answers(sequelize, DataTypes);
   var photos = _photos(sequelize, DataTypes);
-  var products = _products(sequelize, DataTypes);
   var questions = _questions(sequelize, DataTypes);
 
   photos.belongsTo(answers, { as: "answer", foreignKey: "answer_id"});
@@ -18,10 +16,7 @@ function initModels(sequelize) {
   return {
     answers,
     photos,
-    products,
     questions,
   };
 }
 module.exports = initModels;
-module.exports.initModels = initModels;
-module.exports.default = initModels;

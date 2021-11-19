@@ -2,6 +2,9 @@ const express = require('express');
 // const bodyParser = require('body-parser');
 const db = require('./database/index.js');
 
+var initModels = require("./models/init-models");
+var models = initModels(db);
+
 // Parse incoming requests data (https://github.com/expressjs/body-parser)
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: false }));
@@ -10,17 +13,11 @@ const app = express();
 app.set('port', process.env.PORT || 3000);
 
 app.get('/', (req, res) => {
-  db.findOne(req, res);
+  models.questions.findAll({ limit: 10 })
+  .then(data => {
+    res.send(JSON.stringify(data));
+  });
 });
-
-// pg-promise
-// db.one('SELECT name FROM users WHERE id = 40344')
-//   .then(user => {
-//       console.log(user.name); // print user name;
-//   })
-//   .catch(error => {
-//       console.log(error); // print the error;
-//   });
 
 // ANSWERS
 
