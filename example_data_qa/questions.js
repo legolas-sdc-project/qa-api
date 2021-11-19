@@ -2,7 +2,7 @@
 // page & count -> qa/questions?product_id=40344&page=1&count=10
 // no matter what the count is, always returns only 3
 
-// Postgres read ELS - Native options
+// Postgres read ETL - Native options
 
 {
   "product_id": "40344",
