@@ -2,10 +2,6 @@ const {Sequelize, Model, DataTypes} = require('sequelize');
 
 const db = new Sequelize('postgresql://chiaoling:@localhost:5432/sdc');
 
-const Questions = db.define("questions", {
-  id: DataTypes.INTEGER
-});
-
 module.exports = {
   findOne: (req, res) => {
     const id = req.params.id;
