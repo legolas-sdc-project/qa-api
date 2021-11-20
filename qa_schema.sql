@@ -41,3 +41,11 @@ create table qa_schema.photos (
 \copy answers from './data/answers.csv' delimiter ',' csv header;
 
 \copy photos from './data/answers_photos.csv' delimiter ',' csv header;
+
+
+-- change 0, 1 to true/false
+ALTER TABLE qa_schema.questions ALTER reported TYPE bool USING CASE WHEN reported='0' THEN FALSE ELSE TRUE END;
+ALTER TABLE qa_schema.questions ALTER COLUMN reported TYPE bool;
+
+ALTER TABLE qa_schema.answers ALTER reported TYPE bool USING CASE WHEN reported='0' THEN FALSE ELSE TRUE END;
+ALTER TABLE qa_schema.answers ALTER COLUMN reported TYPE bool;

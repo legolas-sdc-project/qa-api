@@ -25,17 +25,35 @@ app.route('/api/qa/questions')
     
     models.questions.findAll(
       { 
-        attributes: { exclude: ['asker_email'] }, 
+        attributes: { exclude: ['asker_email', 'product_id'] }, 
         where: { 
           product_id: product_id, 
           reported: '0'
         },
         offset: offset,
         limit: 3,
+        include: [
+          {
+            model: models.answers, as: 'answers',
+            attributes: { exclude: ['reported'] },
+            include: [
+              {
+                model: models.photos, as: 'photos',
+                attributes: ['url'],
+                raw: true,
+              }
+            ],
+            group: ['answer_id']
+          }
+        ],
+        group: ['question_id']
       }
     )
     .then(data => {
-      res.json(data);
+      res.json({
+        product_id: product_id,
+        results: data
+      });
     })
     .catch(error => {
       console.log(error);
@@ -91,17 +109,30 @@ app.route('/api/qa/questions/:id/answers')
   
   models.answers.findAll(
     { 
-      attributes: { exclude: ['answerer_email'] }, 
+      attributes: { exclude: ['question_id', 'answerer_email', 'reported'] }, 
       where: { 
         question_id: question_id, 
         reported: '0'
       },
       offset: offset,
       limit: count,
+      include: [
+        {   
+          model: models.photos, as: 'photos',
+          attributes: ['url'],
+          raw: true,
+        }
+      ],
+      group: ['answer_id']
     }
   )
   .then(data => {
-    res.send(JSON.stringify(data));
+    res.json({
+      question: question_id,
+      page: page,
+      count: count,
+      results: data
+    });
   })
   .catch(error => {
     res.send(error);
