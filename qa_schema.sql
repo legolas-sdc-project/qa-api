@@ -1,7 +1,7 @@
 -- CREATE TABLES
 
 create table qa_schema.questions(
-  id serial primary key,
+  question_id serial primary key,
   product_id int,
   question_body text,
   question_date bigint,
@@ -12,7 +12,7 @@ create table qa_schema.questions(
 );
 
 create table qa_schema.answers (
-  id serial primary key,
+  answer_id serial primary key,
   question_id int,
   body text,
   date bigint,
