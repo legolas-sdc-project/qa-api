@@ -109,14 +109,21 @@ app.route('/api/qa/questions/:id/answers')
 
 // helpful
 app.put('api/qa/answers/:answer_id/helpful', (req, res) => {
-  
+  answers.update({helpful: helpful++}, {where: req.params.answer_id})
+  .then(response => {
+    res.send(response);
+  })
+  .catch( error => {
+    console.log(error);
+  })
 });
 
 // report - 0 or 1 bit
 app.put('api/qa/answers/:answer_id/report', (req, res) => {
-  
+  answers.update(1, {
+    where: { id: req.params.answer_id }
+  })
 });
-
 
 // check express server connection
 app.listen(3000, function () {
