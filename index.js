@@ -7,10 +7,8 @@ var models = initModels(db);
 
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: false }));
-
 const app = express();
-
-app.set('port', process.env.PORT || 3000);
+const PORT = 3010;
 
 app.get('/', (req, res) => {
 
@@ -37,10 +35,10 @@ app.route('/api/qa/questions')
       }
     )
     .then(data => {
-      res.send(JSON.stringify(data));
+      res.json(data);
     })
     .catch(error => {
-      res.send(error);
+      console.log(error);
     })
   })
 .post((req, res) => {
@@ -66,12 +64,18 @@ app.route('/api/qa/questions')
 // Model.increment('number', { where: { foo: 'bar' });
 // helpful - increment int
 app.put('api/qa/questions/:question_id/helpful', (req, res) => {
-  
+  questions.update({question_helpfulness: question_helpfulness++}, {where: req.params.question_id})
+  .then(response => {
+    res.send(response);
+  })
+  .catch( error => {
+    console.log(error);
+  })
 });
 
 // report - 0 or 1 bit
 app.put('api/qa/questions/:question_id/report', (req, res) => {
-  
+  questions.update({reported: 1}, {where: req.params.question_id})
 });
 
 // ANSWERS
@@ -109,7 +113,7 @@ app.route('/api/qa/questions/:id/answers')
 
 // helpful
 app.put('api/qa/answers/:answer_id/helpful', (req, res) => {
-  answers.update({helpful: helpful++}, {where: req.params.answer_id})
+  answers.update({helpfulness: helpfulness++}, {where: req.params.answer_id})
   .then(response => {
     res.send(response);
   })
@@ -120,14 +124,12 @@ app.put('api/qa/answers/:answer_id/helpful', (req, res) => {
 
 // report - 0 or 1 bit
 app.put('api/qa/answers/:answer_id/report', (req, res) => {
-  answers.update(1, {
-    where: { id: req.params.answer_id }
-  })
+  questions.update({reported: 1}, {where: req.params.question_id})
 });
 
 // check express server connection
-app.listen(3000, function () {
-  console.log('Server is running on Port 3000');
+app.listen(PORT, function () {
+  console.log('Server is running on Port 3010');
 });
 
 // check postgres DB connection
