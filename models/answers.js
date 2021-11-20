@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('answers', {
-    id: {
+    answer_id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -12,7 +12,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: true,
       references: {
         model: 'questions',
-        key: 'id'
+        key: 'question_id'
       }
     },
     body: {
@@ -49,7 +49,7 @@ module.exports = function(sequelize, DataTypes) {
         name: "answers_pkey",
         unique: true,
         fields: [
-          { name: "id" },
+          { name: "answer_id" },
         ]
       },
     ]

@@ -5,62 +5,162 @@ const db = require('./database/index.js');
 var initModels = require("./models/init-models");
 var models = initModels(db);
 
-// Parse incoming requests data (https://github.com/expressjs/body-parser)
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: false }));
-
 const app = express();
-app.set('port', process.env.PORT || 3000);
+const PORT = 3010;
 
 app.get('/', (req, res) => {
-  models.questions.findAll({ limit: 10 })
+
+});
+
+// QUESTIONS
+
+//req url = /qa/questions?product_id=40344
+app.route('/api/qa/questions')
+  .get((req, res) => {
+    const product_id = req.query.product_id;
+    const page = req.query.page || 1;
+    const offset = (page - 1) * 3;
+    
+    models.questions.findAll(
+      { 
+        attributes: { exclude: ['asker_email', 'product_id'] }, 
+        where: { 
+          product_id: product_id, 
+          reported: '0'
+        },
+        offset: offset,
+        limit: 3,
+        include: [
+          {
+            model: models.answers, as: 'answers',
+            attributes: { exclude: ['reported'] },
+            include: [
+              {
+                model: models.photos, as: 'photos',
+                attributes: ['url'],
+                raw: true,
+              }
+            ],
+            group: ['answer_id']
+          }
+        ],
+        group: ['question_id']
+      }
+    )
+    .then(data => {
+      res.json({
+        product_id: product_id,
+        results: data
+      });
+    })
+    .catch(error => {
+      console.log(error);
+    })
+  })
+.post((req, res) => {
+  if (!req.query.product_id) {
+    res.status(400).send({
+      message: "product id can not be empty!"
+    });
+    return;
+  }
+  models.questions.create({
+    product_id: req.query.product_id,question_body: req.body.question_body,question_date: req.body.question_date,asker_name: req.body.asker_name, asker_email:req.body.asker_email,
+    reported: req.body.reported,
+    question_helpfulness: req.body.question_helpfulness
+  })
   .then(data => {
-    res.send(JSON.stringify(data));
-  });
+    res.send(JSON.stringify(data) + ' POSTED!');
+  })
+  .catch(error => {
+    console.log(error);
+  })
+})
+
+// Model.increment('number', { where: { foo: 'bar' });
+// helpful - increment int
+app.put('api/qa/questions/:question_id/helpful', (req, res) => {
+  questions.update({question_helpfulness: question_helpfulness++}, {where: req.params.question_id})
+  .then(response => {
+    res.send(response);
+  })
+  .catch( error => {
+    console.log(error);
+  })
+});
+
+// report - 0 or 1 bit
+app.put('api/qa/questions/:question_id/report', (req, res) => {
+  questions.update({reported: 1}, {where: req.params.question_id})
 });
 
 // ANSWERS
 
 // req url1 = /qa/questions/553458/answers
 // req url2 = /qa/questions/553458/answers?page=1&count=5
-app.get('/api/qa/questions/:id/answers', (req, res) => {
-  // id = req.params.id
-  // page = req.query.page
-  // count = req.query.count
+app.route('/api/qa/questions/:id/answers')
+.get((req, res) => {
+  const question_id = req.params.id;
+  const page = req.query.page || 1;
+  const count = req.query.count || 5;
+  const offset = (page - 1) * count;
+  
+  models.answers.findAll(
+    { 
+      attributes: { exclude: ['question_id', 'answerer_email', 'reported'] }, 
+      where: { 
+        question_id: question_id, 
+        reported: '0'
+      },
+      offset: offset,
+      limit: count,
+      include: [
+        {   
+          model: models.photos, as: 'photos',
+          attributes: ['url'],
+          raw: true,
+        }
+      ],
+      group: ['answer_id']
+    }
+  )
+  .then(data => {
+    res.json({
+      question: question_id,
+      page: page,
+      count: count,
+      results: data
+    });
+  })
+  .catch(error => {
+    res.send(error);
+  })
+})
+.post((req, res) => {
+    
 });
 
 // helpful
 app.put('api/qa/answers/:answer_id/helpful', (req, res) => {
-  
+  answers.update({helpfulness: helpfulness++}, {where: req.params.answer_id})
+  .then(response => {
+    res.send(response);
+  })
+  .catch( error => {
+    console.log(error);
+  })
 });
 
 // report - 0 or 1 bit
 app.put('api/qa/answers/:answer_id/report', (req, res) => {
-  
-});
-
-
-// QUESTIONS
-
-// req url = /qa/questions?product_id=40344
-app.get('/api/qa/questions', (req, res) => {
-  // id = req.query.product_id
-  res.send();
-});
-
-// helpful - increment int
-app.put('api/qa/questions/:question_id/helpful', (req, res) => {
-  
-});
-
-// report - 0 or 1 bit
-app.put('api/qa/questions/:question_id/report', (req, res) => {
-  
+  questions.update({reported: 1}, {where: req.params.question_id})
 });
 
 // check express server connection
-app.listen(3000, function () {
-  console.log('Server is running on Port 3000');
+app.listen(PORT, function () {
+  console.log('Server is running on Port 3010');
 });
 
 // check postgres DB connection
