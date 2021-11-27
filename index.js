@@ -25,16 +25,6 @@ app.get('/api/', (req, res) => {
 
 const transformUrls = (answer) => {
 
-  // answer.photos = transformPhotos(answer.dataValues.id);
-  
-  // [
-  //   {
-  //     "url": "https://images.unsplash.com/photo-1470116892389-0de5d9770b2c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1567&q=80"
-  //   },
-  //   {
-  //       "url": "https://images.unsplash.com/photo-1536922645426-5d658ab49b81?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80"
-  //   }
-  // ]
   let urls = [];
   // answer = JSON.stringify(answer);
   // answer = JSON.parse(answer);
@@ -90,10 +80,8 @@ app.route('/api/qa/questions')
         question.dataValues.answers.forEach(answer => {
           answer = JSON.stringify(answer);
           answer = JSON.parse(answer);
-          result[answer.id] = answer
-          let urls = transformUrls(answer);
-          // delete result[answer.dataValues.id].dataValues.photos;
-          result[answer.id].photos = urls;
+          result[answer.id] = answer;
+          result[answer.id].photos = transformUrls(answer);
         })
         question.dataValues.answers = result;
       })
@@ -102,7 +90,7 @@ app.route('/api/qa/questions')
     .then(result => {
       res.json({
         product_id: product_id,
-        answers: result
+        results: result
       });
     })
     .catch(error => {
@@ -176,6 +164,14 @@ app.route('/api/qa/questions/:id/answers')
       group: ['answer_id']
     }
   )
+  .then(answers => {
+    answers = JSON.stringify(answers);
+    answers = JSON.parse(answers);
+    answers.forEach(answer => {
+      answer.photos = transformUrls(answer);
+    })
+    return answers;
+  })
   .then(data => {
     res.json({
       question: question_id,
