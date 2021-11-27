@@ -1,42 +1,25 @@
 const dotenv = require('dotenv');
 const express = require('express');
-const request = require('supertest');
-// const bodyParser = require('body-parser');
 const { QueryTypes } = require('sequelize');
-const db = require('./database/index.js');
 const axios = require('axios');
 
+// require('newrelic');
+
+const db = require('./database/index.js');
 var initModels = require("./models/init-models");
 var models = initModels(db);
 
 dotenv.config();
 
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: false }));
 const app = express();
 
 app.get('/api/', (req, res) => {
   res.send('Welcome to my awesome API server!');
 });
 
-// const returnUrls = (url) => {
-//   console.log(url);
-// }
-
 const transformUrls = (answer) => {
-
   let urls = [];
-  // answer = JSON.stringify(answer);
-  // answer = JSON.parse(answer);
   answer.photos.forEach(url => urls.push((url.url)))
-  return urls;
-}
-
-const transformPhotos = async (answer_id) => {
-  const urls = await models.photos.findAll({
-    attribute: ['url'],
-    where: { answer_id: answer_id}
-  }).map(urls => url.get("url")) // [1,2,3]
   return urls;
 }
 
@@ -88,6 +71,7 @@ app.route('/api/qa/questions')
       return questions;
     })
     .then(result => {
+      res.status = 200;
       res.json({
         product_id: product_id,
         results: result
@@ -173,6 +157,7 @@ app.route('/api/qa/questions/:id/answers')
     return answers;
   })
   .then(data => {
+    res.status = 200;
     res.json({
       question: question_id,
       page: page,

@@ -1,5 +1,14 @@
 -- CREATE TABLES
 
+create table qa_schema.products (
+  id serial primary key,
+  name varchar(30) not null,
+  slogan text,
+  description text,
+  category varchar(30),
+  default_price int
+);
+
 create table qa_schema.questions (
   question_id serial primary key,
   product_id int,
@@ -8,7 +17,10 @@ create table qa_schema.questions (
   asker_name varchar(30) not null,
   asker_email varchar(50) not null,
   reported boolean,
-  question_helpfulness int
+  question_helpfulness int,
+  constraint fk_products
+  foreign key(product_id)
+  references products(id)
 );
 
 create table qa_schema.answers (
@@ -36,17 +48,19 @@ create table qa_schema.photos (
 
 -- load csv data into tables
 
-\copy questions from './data/questions.csv' delimiter ',' csv header;
+\copy qa_schema.photos from './data/product.csv' delimiter ',' csv header;
 
-\copy answers from './data/answers.csv' delimiter ',' csv header;
+\copy qa_schema.questions from './data/questions.csv' delimiter ',' csv header;
 
-\copy photos from './data/answers_photos.csv' delimiter ',' csv header;
+\copy qa_schema.answers from './data/answers.csv' delimiter ',' csv header;
+
+\copy qa_schema.photos from './data/answers_photos.csv' delimiter ',' csv header;
 
 -- change epoch time to timestamp with time zone
-ALTER TABLE questions ALTER COLUMN question_date
+ALTER TABLE qa_schema.questions ALTER COLUMN question_date
 SET DATA TYPE timestamp with time zone USING timestamp with time zone 'epoch' + question_date * interval '1 millisecond';
 
-ALTER TABLE answers ALTER COLUMN date
+ALTER TABLE qa_schema.answers ALTER COLUMN date
 SET DATA TYPE timestamp with time zone USING timestamp with time zone 'epoch' + date * interval '1 millisecond';
 
 -- change 0, 1 to true/false
