@@ -1,20 +1,44 @@
+const dotenv = require('dotenv');
 const express = require('express');
+const request = require('supertest');
 // const bodyParser = require('body-parser');
+const { QueryTypes } = require('sequelize');
 const db = require('./database/index.js');
+const axios = require('axios');
 
 var initModels = require("./models/init-models");
 var models = initModels(db);
 
+dotenv.config();
+
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: false }));
 const app = express();
-const PORT = 3010;
 
-app.get('/', (req, res) => {
-
+app.get('/api/', (req, res) => {
+  res.send('Welcome to my awesome API server!');
 });
 
-// QUESTIONS
+// const returnUrls = (url) => {
+//   console.log(url);
+// }
+
+const transformUrls = (answer) => {
+
+  let urls = [];
+  // answer = JSON.stringify(answer);
+  // answer = JSON.parse(answer);
+  answer.photos.forEach(url => urls.push((url.url)))
+  return urls;
+}
+
+const transformPhotos = async (answer_id) => {
+  const urls = await models.photos.findAll({
+    attribute: ['url'],
+    where: { answer_id: answer_id}
+  }).map(urls => url.get("url")) // [1,2,3]
+  return urls;
+}
 
 //req url = /qa/questions?product_id=40344
 app.route('/api/qa/questions')
@@ -25,7 +49,7 @@ app.route('/api/qa/questions')
     
     models.questions.findAll(
       { 
-        attributes: { exclude: ['asker_email', 'product_id'] }, 
+        attributes: { exclude: ['product_id', 'asker_email'] }, 
         where: { 
           product_id: product_id, 
           reported: '0'
@@ -35,9 +59,9 @@ app.route('/api/qa/questions')
         include: [
           {
             model: models.answers, as: 'answers',
-            attributes: { exclude: ['reported'] },
+            attributes: [['answer_id', 'id'], 'body', 'date', 'answerer_name', 'helpfulness'],
             include: [
-              {
+              {   
                 model: models.photos, as: 'photos',
                 attributes: ['url'],
                 raw: true,
@@ -49,10 +73,24 @@ app.route('/api/qa/questions')
         group: ['question_id']
       }
     )
-    .then(data => {
+    .then(questions => {
+      
+      questions.forEach(question => {
+        var result = {};
+        question.dataValues.answers.forEach(answer => {
+          answer = JSON.stringify(answer);
+          answer = JSON.parse(answer);
+          result[answer.id] = answer;
+          result[answer.id].photos = transformUrls(answer);
+        })
+        question.dataValues.answers = result;
+      })
+      return questions;
+    })
+    .then(result => {
       res.json({
         product_id: product_id,
-        results: data
+        results: result
       });
     })
     .catch(error => {
@@ -62,7 +100,7 @@ app.route('/api/qa/questions')
 .post((req, res) => {
   if (!req.query.product_id) {
     res.status(400).send({
-      message: "product id can not be empty!"
+    message: "product id can not be empty!"
     });
     return;
   }
@@ -126,6 +164,14 @@ app.route('/api/qa/questions/:id/answers')
       group: ['answer_id']
     }
   )
+  .then(answers => {
+    answers = JSON.stringify(answers);
+    answers = JSON.parse(answers);
+    answers.forEach(answer => {
+      answer.photos = transformUrls(answer);
+    })
+    return answers;
+  })
   .then(data => {
     res.json({
       question: question_id,
@@ -158,8 +204,127 @@ app.put('api/qa/answers/:answer_id/report', (req, res) => {
   questions.update({reported: 1}, {where: req.params.question_id})
 });
 
+/////////////////////////////////////////////
+
+// OTHER API CALLS - Re-direct to Atelier API
+
+app.get('/api/reviews', (req, res) => {
+  console.log(req.params, req.query);
+  const product_id = req.query.product_id;
+  axios({
+    url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/reviews?product_id=${product_id}`,
+    method: 'get',
+    headers: {
+      'Authorization': process.env.API_TOKEN
+    }
+  }).then(reviewsData => {
+    res.json(reviewsData.data);
+  }).catch(error => {
+    console.log(error);
+  })
+})
+
+app.get('/api/reviews/meta', (req, res) => {
+  const product_id = req.query.product_id;
+  axios({
+    url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/reviews/meta?product_id=${product_id}`,
+    method: 'get',
+    headers: {
+      'Authorization': process.env.API_TOKEN
+    }
+  }).then(reviewsData => {
+    res.json(reviewsData.data);
+  }).catch(error => {
+    console.log(error);
+  })
+})
+
+app.get('/api/products', (req, res) => {
+  axios({
+    url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/products`,
+    method: 'get',
+    headers: {
+      'Authorization': process.env.API_TOKEN
+    }
+  }).then(productData => {
+    res.json(productData.data);
+  }).catch(error => {
+    console.log(error);
+  })
+})
+
+app.get('/api/products/:product_id', (req, res) => {
+  const product_id = req.params.product_id;
+  axios({
+    url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/products/${product_id}`,
+    method: 'get',
+    headers: {
+      'Authorization': process.env.API_TOKEN
+    }
+  }).then(productData => {
+    res.json(productData.data);
+  }).catch(error => {
+    console.log(error);
+  })
+})
+
+app.get('/api/products/:product_id/styles', (req, res) => {
+  const product_id = req.params.product_id;
+  axios({
+    url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/products/${product_id}/styles`,
+    method: 'get',
+    headers: {
+      'Authorization': process.env.API_TOKEN
+    }
+  }).then(productData => {
+    res.json(productData.data);
+  }).catch(error => {
+    console.log(error);
+  })
+})
+
+app.get('/api/products/:product_id/related', (req, res) => {
+  const product_id = req.params.product_id;
+  axios({
+    url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/products/${product_id}/related`,
+    method: 'get',
+    headers: {
+      'Authorization': process.env.API_TOKEN
+    }
+  }).then(productData => {
+    res.json(productData.data);
+  }).catch(error => {
+    console.log(error);
+  })
+})
+
+// Photos
+// Return photo urls as an array
+const returnUrls = () => {
+  
+}
+
+// QUESTIONS
+
+// Atelier Questions/Answers
+// app.get('/api/qa/questions', (req, res) => {
+//   const product_id = req.query.product_id;
+//   axios({
+//     url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/questions?product_id=${product_id}`,
+//     method: 'get',
+//     headers: {
+//       'Authorization': process.env.API_TOKEN
+//     }
+//   }).then(data => {
+//     console.log(data.data);
+//     res.send(data.data)
+//   }).catch(error => {
+//     console.log(error);
+//   })
+// })
+
 // check express server connection
-app.listen(PORT, function () {
+app.listen(process.env.PORT, function () {
   console.log('Server is running on Port 3010');
 });
 
@@ -171,3 +336,4 @@ db.authenticate()
   .catch(err => {
     console.error('Unable to connect to the database:', err);
   });
+  

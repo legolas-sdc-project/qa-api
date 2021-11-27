@@ -27,12 +27,12 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.STRING(50),
       allowNull: false
     },
-    reported: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true
-    },
     question_helpfulness: {
       type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    reported: {
+      type: DataTypes.BOOLEAN,
       allowNull: true
     }
   }, {

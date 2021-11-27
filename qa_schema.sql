@@ -1,13 +1,13 @@
 -- CREATE TABLES
 
-create table qa_schema.questions(
+create table qa_schema.questions (
   question_id serial primary key,
   product_id int,
   question_body text,
   question_date bigint,
   asker_name varchar(30) not null,
   asker_email varchar(50) not null,
-  reported bit,
+  reported boolean,
   question_helpfulness int
 );
 
@@ -18,11 +18,11 @@ create table qa_schema.answers (
   date bigint,
   answerer_name varchar(30) not null,
   answerer_email varchar(50) not null,
-  reported bit,
+  reported boolean,
   helpfulness int,
   constraint fk_questions
   foreign key(question_id)
-  references questions(id)
+  references questions(question_id)
 );
 
 create table qa_schema.photos (
@@ -31,7 +31,7 @@ create table qa_schema.photos (
   url varchar,
   constraint fk_answers
   foreign key(answer_id)
-  references answers(id)
+  references answers(answer_id)
 );
 
 -- load csv data into tables
@@ -42,10 +42,16 @@ create table qa_schema.photos (
 
 \copy photos from './data/answers_photos.csv' delimiter ',' csv header;
 
+-- change epoch time to timestamp with time zone
+ALTER TABLE questions ALTER COLUMN question_date
+SET DATA TYPE timestamp with time zone USING timestamp with time zone 'epoch' + question_date * interval '1 millisecond';
+
+ALTER TABLE answers ALTER COLUMN date
+SET DATA TYPE timestamp with time zone USING timestamp with time zone 'epoch' + date * interval '1 millisecond';
 
 -- change 0, 1 to true/false
-ALTER TABLE qa_schema.questions ALTER reported TYPE bool USING CASE WHEN reported='0' THEN FALSE ELSE TRUE END;
-ALTER TABLE qa_schema.questions ALTER COLUMN reported TYPE bool;
+-- ALTER TABLE qa_schema.questions ALTER reported TYPE bool USING CASE WHEN reported='0' THEN FALSE ELSE TRUE END;
+-- ALTER TABLE qa_schema.questions ALTER COLUMN reported TYPE bool;
 
-ALTER TABLE qa_schema.answers ALTER reported TYPE bool USING CASE WHEN reported='0' THEN FALSE ELSE TRUE END;
-ALTER TABLE qa_schema.answers ALTER COLUMN reported TYPE bool;
+-- ALTER TABLE qa_schema.answers ALTER reported TYPE bool USING CASE WHEN reported='0' THEN FALSE ELSE TRUE END;
+-- ALTER TABLE qa_schema.answers ALTER COLUMN reported TYPE bool;
