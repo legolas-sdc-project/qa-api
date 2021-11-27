@@ -19,48 +19,34 @@ app.get('/api/', (req, res) => {
   res.send('Welcome to my awesome API server!');
 });
 
-// const records = await db.query('select 1 as `answer_id.bar.baz`', {
-//   nest: true,
-//   type: QueryTypes.SELECT
-// });
-
-// {
-//   '5181045': {
-//     'id': 5181045,
-//     'body': 'sdsdsdsd//dsds',
-//     'date': '2021-11-10T00:00:00.000Z',
-//     'answerer_name': 'tes',
-//     'helpfulness': 5,
-//     'photos': [
-//       'a',
-//       'b',
-//       'c',
-//       'd',
-//       'e'
-//     ]
-//   }
-// }
-
 // const returnUrls = (url) => {
 //   console.log(url);
 // }
 
-const transformAnswer = (answer) => {
+const transformUrls = (answer) => {
 
-  answer.photos = transformPhotos(answer.dataValues.id);
-  return answer;
+  // answer.photos = transformPhotos(answer.dataValues.id);
+  
+  // [
+  //   {
+  //     "url": "https://images.unsplash.com/photo-1470116892389-0de5d9770b2c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1567&q=80"
+  //   },
+  //   {
+  //       "url": "https://images.unsplash.com/photo-1536922645426-5d658ab49b81?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80"
+  //   }
+  // ]
+  let urls = [];
+  // answer = JSON.stringify(answer);
+  // answer = JSON.parse(answer);
+  answer.photos.forEach(url => urls.push((url.url)))
+  return urls;
 }
 
-const transformPhotos = (answer_id) => {
-  let urls = [];
-  models.photos.findAll({
+const transformPhotos = async (answer_id) => {
+  const urls = await models.photos.findAll({
     attribute: ['url'],
     where: { answer_id: answer_id}
-  }).then(photos => {
-    photos.forEach(photo => {
-      urls.push(photo.dataValues.url);
-    })
-  })
+  }).map(urls => url.get("url")) // [1,2,3]
   return urls;
 }
 
@@ -84,26 +70,30 @@ app.route('/api/qa/questions')
           {
             model: models.answers, as: 'answers',
             attributes: [['answer_id', 'id'], 'body', 'date', 'answerer_name', 'helpfulness'],
+            include: [
+              {   
+                model: models.photos, as: 'photos',
+                attributes: ['url'],
+                raw: true,
+              }
+            ],
+            group: ['answer_id']
           }
         ],
         group: ['question_id']
       }
     )
     .then(questions => {
-      // const all = async () => {
-      //   const promises = questions.map((question) => transformAnswers(question.dataValues.answers));
-      //   const result = await Promise.all(promises);
-      //   console.log('.all done');
-      //   return result;
-      // };
-      // const testResult = all();
-      // console.log(JSON.stringify(testResult));
-      // return testResult;
       
       questions.forEach(question => {
         var result = {};
         question.dataValues.answers.forEach(answer => {
-          result[answer.dataValues.id] = transformAnswer(answer);
+          answer = JSON.stringify(answer);
+          answer = JSON.parse(answer);
+          result[answer.id] = answer
+          let urls = transformUrls(answer);
+          // delete result[answer.dataValues.id].dataValues.photos;
+          result[answer.id].photos = urls;
         })
         question.dataValues.answers = result;
       })
