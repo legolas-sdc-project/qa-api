@@ -2,6 +2,7 @@ const dotenv = require('dotenv');
 const express = require('express');
 const { QueryTypes } = require('sequelize');
 const axios = require('axios');
+const cors = require('cors');
 // require('newrelic');
 const db = require('./database/index.js');
 var initModels = require("./models/init-models");
@@ -10,6 +11,13 @@ var models = initModels(db);
 dotenv.config();
 
 const app = express();
+app.use(cors({
+  origin: '*'
+}));
+
+app.get('/', (req, res) => {
+  res.send('Connected to server!');
+});
 
 app.get('/api/', (req, res) => {
   res.send('Welcome to my awesome API server!');
