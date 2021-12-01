@@ -3,6 +3,7 @@ const { sleep, check } = require('k6');
 
 export const options = {
   vus: 10,
+  iterations: 100,
   duration: '1s',
 };
 
@@ -24,3 +25,20 @@ export default () => {
   });
   sleep(1);
 }
+
+// export const options = {
+//   discardResponseBodies: true,
+//   scenarios: {
+//     contacts: {
+//       executor: 'constant-arrival-rate',
+//       rate: 1000, // x RPS, since timeUnit is the default 1s
+//       duration: '30s',
+//       preAllocatedVUs: 1000,
+//       maxVUs: 1000,
+//     },
+//   },
+// };
+
+// enmulate users - simulate user interactions
+
+// auto-rollback - prevent post request being actually stored

@@ -2,9 +2,7 @@ const dotenv = require('dotenv');
 const express = require('express');
 const { QueryTypes } = require('sequelize');
 const axios = require('axios');
-
 // require('newrelic');
-
 const db = require('./database/index.js');
 var initModels = require("./models/init-models");
 var models = initModels(db);
@@ -35,7 +33,7 @@ app.route('/api/qa/questions')
         attributes: { exclude: ['product_id', 'asker_email'] }, 
         where: { 
           product_id: product_id, 
-          reported: '0'
+          reported: false
         },
         offset: offset,
         limit: 3,
@@ -88,10 +86,15 @@ app.route('/api/qa/questions')
     });
     return;
   }
+  const { body, name, email } = req.body;
   models.questions.create({
-    product_id: req.query.product_id,question_body: req.body.question_body,question_date: req.body.question_date,asker_name: req.body.asker_name, asker_email:req.body.asker_email,
-    reported: req.body.reported,
-    question_helpfulness: req.body.question_helpfulness
+    product_id: req.query.product_id,
+    question_body: body,
+    question_date: db.literal('CURRENT_TIMESTAMP'),
+    asker_name: name, 
+    asker_email: email,
+    reported: 0,
+    question_helpfulness: 0
   })
   .then(data => {
     res.send(JSON.stringify(data) + ' POSTED!');
@@ -103,10 +106,17 @@ app.route('/api/qa/questions')
 
 // Model.increment('number', { where: { foo: 'bar' });
 // helpful - increment int
-app.put('api/qa/questions/:question_id/helpful', (req, res) => {
-  questions.update({question_helpfulness: question_helpfulness++}, {where: req.params.question_id})
-  .then(response => {
-    res.send(response);
+app.put('/api/qa/questions/:question_id/helpful', (req, res) => {
+  models.questions.update(
+    { 
+      question_helpfulness: db.literal('question_helpfulness + 1') 
+    }, 
+    { where: { 
+      question_id: req.params.question_id
+    } 
+  })
+  .then(() => {
+    res.send(`question id: ${req.params.question_id}'s helpfulness updated`);
   })
   .catch( error => {
     console.log(error);
@@ -114,8 +124,21 @@ app.put('api/qa/questions/:question_id/helpful', (req, res) => {
 });
 
 // report - 0 or 1 bit
-app.put('api/qa/questions/:question_id/report', (req, res) => {
-  questions.update({reported: 1}, {where: req.params.question_id})
+app.put('/api/qa/questions/:question_id/report', (req, res) => {
+  models.questions.update(
+    { 
+      reported: 1
+    }, 
+    { where: { 
+      question_id: req.params.question_id
+    } 
+  })
+  .then(() => {
+    res.send(`question id: ${req.params.question_id} has been reported`);
+  })
+  .catch( error => {
+    console.log(error);
+  })
 });
 
 // ANSWERS
@@ -134,7 +157,7 @@ app.route('/api/qa/questions/:id/answers')
       attributes: { exclude: ['question_id', 'answerer_email', 'reported'] }, 
       where: { 
         question_id: question_id, 
-        reported: '0'
+        reported: false
       },
       offset: offset,
       limit: count,
@@ -170,14 +193,35 @@ app.route('/api/qa/questions/:id/answers')
   })
 })
 .post((req, res) => {
-    
+  const { body, name, email, photos } = req.body;
+  models.questions.create({
+    question_id: req.query.question_id,
+    body: body,
+    date_written: db.literal('CURRENT_TIMESTAMP'),
+    answerer_name: name, 
+    answerer_email: email,
+    reported: 0,
+    helpfulness: 0
+  })
+  .then(data => {
+    res.send(JSON.stringify(data) + ' POSTED!');
+  })
+  .catch(error => {
+    console.log(error);
+  })
 });
 
 // helpful
-app.put('api/qa/answers/:answer_id/helpful', (req, res) => {
-  answers.update({helpfulness: helpfulness++}, {where: req.params.answer_id})
-  .then(response => {
-    res.send(response);
+app.put('/api/qa/answers/:answer_id/helpful', (req, res) => {
+  models.answers.update({ 
+      helpfulness: db.literal('helpfulness + 1') 
+    }, 
+    { where: { 
+      answer_id: req.params.answer_id
+    } 
+  })
+  .then(() => {
+    res.send(`answer id: ${req.params.answer_id}'s helpfulness updated`);
   })
   .catch( error => {
     console.log(error);
@@ -185,8 +229,20 @@ app.put('api/qa/answers/:answer_id/helpful', (req, res) => {
 });
 
 // report - 0 or 1 bit
-app.put('api/qa/answers/:answer_id/report', (req, res) => {
-  questions.update({reported: 1}, {where: req.params.question_id})
+app.put('/api/qa/answers/:answer_id/report', (req, res) => {
+  models.answers.update({ 
+      reported: 1
+    }, 
+    { where: { 
+      answer_id: req.params.answer_id
+    } 
+  })
+  .then(() => {
+    res.send(`answer id: ${req.params.answer_id} has been reported`);
+  })
+  .catch( error => {
+    console.log(error);
+  })
 });
 
 /////////////////////////////////////////////
@@ -194,7 +250,6 @@ app.put('api/qa/answers/:answer_id/report', (req, res) => {
 // OTHER API CALLS - Re-direct to Atelier API
 
 app.get('/api/reviews', (req, res) => {
-  console.log(req.params, req.query);
   const product_id = req.query.product_id;
   axios({
     url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/reviews?product_id=${product_id}`,
@@ -282,31 +337,6 @@ app.get('/api/products/:product_id/related', (req, res) => {
     console.log(error);
   })
 })
-
-// Photos
-// Return photo urls as an array
-const returnUrls = () => {
-  
-}
-
-// QUESTIONS
-
-// Atelier Questions/Answers
-// app.get('/api/qa/questions', (req, res) => {
-//   const product_id = req.query.product_id;
-//   axios({
-//     url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/questions?product_id=${product_id}`,
-//     method: 'get',
-//     headers: {
-//       'Authorization': process.env.API_TOKEN
-//     }
-//   }).then(data => {
-//     console.log(data.data);
-//     res.send(data.data)
-//   }).catch(error => {
-//     console.log(error);
-//   })
-// })
 
 // check express server connection
 app.listen(process.env.PORT, function () {

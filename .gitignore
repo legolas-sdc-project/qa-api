@@ -23,3 +23,9 @@ package-lock.json
 
 # new relic
 *newrelic.js
+
+# pem file
+*.pem
+
+# config file
+config.js
