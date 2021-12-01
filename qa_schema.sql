@@ -1,6 +1,6 @@
 -- CREATE TABLES
 
-create table qa_schema.products (
+CREATE TABLE qa_schema.products (
   id serial primary key,
   name varchar(30) not null,
   slogan text,
@@ -9,7 +9,7 @@ create table qa_schema.products (
   default_price int
 );
 
-create table qa_schema.questions (
+CREATE TABLE qa_schema.questions (
   question_id serial primary key,
   product_id int,
   question_body text,
@@ -20,10 +20,10 @@ create table qa_schema.questions (
   question_helpfulness int,
   constraint fk_products
   foreign key(product_id)
-  references products(id)
+  references qa_schema.products(id)
 );
 
-create table qa_schema.answers (
+CREATE TABLE qa_schema.answers (
   answer_id serial primary key,
   question_id int,
   body text,
@@ -34,21 +34,21 @@ create table qa_schema.answers (
   helpfulness int,
   constraint fk_questions
   foreign key(question_id)
-  references questions(question_id)
+  references qa_schema.questions(question_id)
 );
 
-create table qa_schema.photos (
+CREATE TABLE qa_schema.photos (
   id serial primary key,
   answer_id int,
   url varchar,
   constraint fk_answers
   foreign key(answer_id)
-  references answers(answer_id)
+  references qa_schema.answers(answer_id)
 );
 
 -- load csv data into tables
 
-\copy qa_schema.photos from './data/product.csv' delimiter ',' csv header;
+\copy qa_schema.products from './data/product.csv' delimiter ',' csv header;
 
 \copy qa_schema.questions from './data/questions.csv' delimiter ',' csv header;
 
@@ -63,9 +63,6 @@ SET DATA TYPE timestamp with time zone USING timestamp with time zone 'epoch' + 
 ALTER TABLE qa_schema.answers ALTER COLUMN date
 SET DATA TYPE timestamp with time zone USING timestamp with time zone 'epoch' + date * interval '1 millisecond';
 
--- change 0, 1 to true/false
--- ALTER TABLE qa_schema.questions ALTER reported TYPE bool USING CASE WHEN reported='0' THEN FALSE ELSE TRUE END;
--- ALTER TABLE qa_schema.questions ALTER COLUMN reported TYPE bool;
-
--- ALTER TABLE qa_schema.answers ALTER reported TYPE bool USING CASE WHEN reported='0' THEN FALSE ELSE TRUE END;
--- ALTER TABLE qa_schema.answers ALTER COLUMN reported TYPE bool;
+CREATE INDEX product_id_index ON qa_schema.questions(product_id);
+CREATE INDEX question_id_index ON qa_schema.answers(question_id);
+CREATE INDEX answer_id_index ON qa_schema.photos(answer_id);

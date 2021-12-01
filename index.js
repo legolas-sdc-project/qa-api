@@ -2,9 +2,7 @@ const dotenv = require('dotenv');
 const express = require('express');
 const { QueryTypes } = require('sequelize');
 const axios = require('axios');
-
 // require('newrelic');
-
 const db = require('./database/index.js');
 var initModels = require("./models/init-models");
 var models = initModels(db);
@@ -339,25 +337,6 @@ app.get('/api/products/:product_id/related', (req, res) => {
     console.log(error);
   })
 })
-
-// QUESTIONS
-
-// Atelier Questions/Answers
-// app.get('/api/qa/questions', (req, res) => {
-//   const product_id = req.query.product_id;
-//   axios({
-//     url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/questions?product_id=${product_id}`,
-//     method: 'get',
-//     headers: {
-//       'Authorization': process.env.API_TOKEN
-//     }
-//   }).then(data => {
-//     console.log(data.data);
-//     res.send(data.data)
-//   }).catch(error => {
-//     console.log(error);
-//   })
-// })
 
 // check express server connection
 app.listen(process.env.PORT, function () {

@@ -26,3 +26,6 @@ package-lock.json
 
 # pem file
 *.pem
+
+# config file
+config.js
