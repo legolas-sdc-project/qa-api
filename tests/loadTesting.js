@@ -2,8 +2,7 @@ const http = require('k6/http');
 const { sleep, check } = require('k6');
 
 export const options = {
-  vus: 10,
-  iterations: 100,
+  vus: 500,
   duration: '1s',
 };
 
