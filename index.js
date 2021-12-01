@@ -11,9 +11,9 @@ var models = initModels(db);
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: '*'
-}));
+// app.use(cors({
+//   origin: '*'
+// }));
 
 app.get('/', (req, res) => {
   res.send('Connected to server!');
