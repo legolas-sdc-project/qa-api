@@ -1,3 +1,7 @@
+-- CREATE SCHEMA --
+CREATE SCHEMA qa_schema;
+SET search_path TO qa_schema, public;
+
 -- CREATE TABLES
 
 CREATE TABLE qa_schema.products (
@@ -48,13 +52,13 @@ CREATE TABLE qa_schema.photos (
 
 -- load csv data into tables
 
-\copy qa_schema.products from './data/product.csv' delimiter ',' csv header;
+\copy qa_schema.products from '/home/ubuntu/qa-db/data/product.csv' delimiter ',' csv header;
 
-\copy qa_schema.questions from './data/questions.csv' delimiter ',' csv header;
+\copy qa_schema.questions from '/home/ubuntu/qa-db/data/questions.csv' delimiter ',' csv header;
 
-\copy qa_schema.answers from './data/answers.csv' delimiter ',' csv header;
+\copy qa_schema.answers from '/home/ubuntu/qa-db/data/answers.csv' delimiter ',' csv header;
 
-\copy qa_schema.photos from './data/answers_photos.csv' delimiter ',' csv header;
+\copy qa_schema.photos from '/home/ubuntu/qa-db/data/answers_photos.csv' delimiter ',' csv header;
 
 -- change epoch time to timestamp with time zone
 ALTER TABLE qa_schema.questions ALTER COLUMN question_date
