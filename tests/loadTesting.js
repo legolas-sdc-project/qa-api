@@ -2,7 +2,7 @@ const http = require('k6/http');
 const { sleep, check } = require('k6');
 
 export const options = {
-  vus: 300,
+  vus: 100,
   duration: '1s',
 };
 
